@@ -85,6 +85,9 @@ button.btn.sm{padding:8px 12px;min-height:38px;font-size:.9rem}
   background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 8px;cursor:pointer}
 .task:disabled{opacity:.5;cursor:not-allowed}
 .task .t{font-weight:600}
+.iconbtn{width:100%;height:46px;font-size:1.6rem;line-height:1;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.picker{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0}
+.picker button{font-size:1.6rem;line-height:1;padding:9px 0;background:var(--paper);border:0;border-radius:10px;cursor:pointer}
 .off{opacity:.65}
 .card.off{border-style:dashed}
 .monthbar select{width:auto;min-width:210px}
@@ -361,7 +364,7 @@ function render(){
   const view = ({ inicio:vInicio, tomar:vTomar, historial:vHistorial, pendientes:vPendientes,
                   resumen:vResumen, tareas:vTareas, cierre:vCierre, ajustes:vAjustes })[S.tab]();
   app.innerHTML = `<div class="wrap">
-    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"} · v3</small></div>
+    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"} · v4</small></div>
     <button class="linkbtn" data-act="logout">Salir</button></header>
     ${view}</div>
     <nav class="tabs" aria-label="Secciones">${tabs.map(([k,n]) =>
@@ -457,6 +460,15 @@ function vResumen(){
     <div class="muted small">${r.tareas} tareas aprobadas · ${r.puntos} puntos</div></div>`).join("") || `<div class="empty">Sin hijas cargadas.</div>`}`;
 }
 
+const ICON_POOL = ["🍴","🍽️","🥄","🔪","🍳","🥘","🍝","🥗","🥪","🍕","🍰","🧁","🍪","🍎","🥛","☕","🧊","🧂","🧽","🧼","🧴","🧹","🪣","🧺","🗑️","🚽","🛁","🚿","🪥","🪞","🪟","🧻","🛏️","🛋️","🏠","🚪","🪴","🧸","👚","👕","👖","🧦","📚","🎒","🌱","🌳","🌷","💧","🍂","🚗","🚘","🛒","📦","🔧","💡","🧯","🐕","🐈","🦴","🐾","⭐","✅"];
+function pickerHtml(){
+  return `<h2 style="margin-top:0">Elegí un ícono</h2>
+    <div class="picker">${ICON_POOL.map(i => `<button type="button" data-act="seticon" data-ico="${i}">${i}</button>`).join("")}</div>
+    <label class="f" for="ic_otro">¿Otro? Pegalo o usá el teclado de emojis</label>
+    <div class="trow"><input type="text" id="ic_otro" maxlength="8" style="font-size:1.3rem"><button type="button" class="btn sm" data-act="seticonx">Usar</button></div>
+    <div class="actions"><button type="button" class="btn ghost" data-act="cancel">Cancelar</button></div>`;
+}
+
 function catOptions(sel){
   const cats = [...new Set([...S.tasks].sort((a,b)=>(a.orden||0)-(b.orden||0)).map(t=>t.categoria).filter(Boolean))];
   if (sel && !cats.includes(sel)) cats.push(sel);
@@ -480,7 +492,7 @@ function vTareas(){
   ${tasks.map(t => `<div class="card${t.activa===false?" off":""}" data-tid="${t.id}">
     ${t.activa===false ? `<span class="chip resuelta">Desactivada</span>` : ""}
     <div class="trow"><div><label class="f" style="margin-top:0">Nombre</label><input type="text" data-f="nombre" value="${esc(t.nombre)}"></div>
-    <div><label class="f" style="margin-top:0">Ícono</label><input type="text" data-f="icono" value="${esc(ico(t.id))}" maxlength="8" style="text-align:center;font-size:1.3rem"></div></div>
+    <div><label class="f" style="margin-top:0">Ícono</label><button type="button" class="iconbtn" data-act="pickicon" data-id="${t.id}" aria-label="Elegir ícono">${ico(t.id)}</button></div></div>
     <div class="grid2"><div><label class="f">Categoría</label><select data-f="categoria">${catOptions(t.categoria)}</select></div>
     <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" data-f="precio" value="${t.precio}"></div></div>
     <label class="f">Máx. por día</label><input type="number" inputmode="numeric" data-f="max" value="${t.max||1}">
@@ -488,7 +500,7 @@ function vTareas(){
     <div class="actions"><button class="btn ghost sm" data-act="deltask" data-id="${t.id}">Eliminar tarea</button></div></div>`).join("")}
   <div class="card"><h3>Agregar tarea</h3>
     <div class="trow"><div><label class="f" style="margin-top:0">Nombre</label><input type="text" id="nt_nombre"></div>
-    <div><label class="f" style="margin-top:0">Ícono</label><input type="text" id="nt_icono" placeholder="✅" maxlength="8" style="text-align:center;font-size:1.3rem"></div></div>
+    <div><label class="f" style="margin-top:0">Ícono</label><button type="button" class="iconbtn" id="nt_iconbtn" data-act="pickicon" data-id="new" aria-label="Elegir ícono">${S.ntIcon || "✅"}</button></div></div>
     <div class="grid2"><div><label class="f">Categoría</label><select id="nt_cat">${catOptions("")}</select></div>
     <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" id="nt_precio"></div></div>
     <div class="actions"><button class="btn" data-act="addtask">Agregar</button></div></div>`;
@@ -670,12 +682,20 @@ document.addEventListener("click", async e => {
         await deleteDoc(doc(db,"tasks",id)); toast("Tarea eliminada");
       }
     }
+    if (act === "pickicon") { S.draft = { target:id }; openDlg(pickerHtml()); }
+    if (act === "seticon" || act === "seticonx") {
+      const v = act === "seticon" ? b.dataset.ico : cut2($("#ic_otro").value);
+      if (!v) return toast("Escribí o pegá un emoji.");
+      const tg = S.draft && S.draft.target; closeDlg();
+      if (tg === "new") { S.ntIcon = v; const nb = $("#nt_iconbtn"); if (nb) nb.textContent = v; }
+      else if (tg) { await updateDoc(doc(db,"tasks",tg), { icono:v }); toast("Ícono guardado"); }
+    }
     if (act === "addtask") {
       const nombre = $("#nt_nombre").value.trim(), categoria = $("#nt_cat").value, precio = Number($("#nt_precio").value);
       if (!nombre || !(precio >= 0)) return toast("Falta nombre o precio.");
       if (categoria === "__nueva__") return toast("Elegí o creá una categoría.");
       const ref = doc(collection(db,"tasks"));
-      await setDoc(ref, { nombre, icono: cut2($("#nt_icono").value) || "✅", categoria, precio, max:1, activa:true, orden:Date.now() }); toast("Agregada");
+      await setDoc(ref, { nombre, icono: S.ntIcon || "✅", categoria, precio, max:1, activa:true, orden:Date.now() }); S.ntIcon = null; toast("Agregada");
     }
     if (act === "close") {
       const email = b.dataset.email, st = stats(email, S.mes); S.draft = { email, total:st.dinero, tareas:st.tareas };

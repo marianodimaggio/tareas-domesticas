@@ -143,7 +143,7 @@ const _seedTasks=[
  ["Cocina","Preparar una ensalada",1500,1],["Cocina","Preparar una comida sencilla para la familia",3500,1],
  ["Su cuarto","Hacer la cama",1500,1],["Su cuarto","Ordenar la pieza (sin cama ni aspirado)",2500,1],["Su cuarto","Aspirar su pieza",1500,1],
  ["Limpieza general","Aspirar la casa (sin tu pieza)",2000,1],["Limpieza general","Barrer la cochera",2000,1],
- ["Limpieza general","Lavar el auto (solo exterior)",3500,1,"auto"],["Limpieza general","Lavar el auto (completo)",7000,1,"auto"],
+ ["Limpieza general","Lavar el auto (solo exterior)",3500,1],["Limpieza general","Lavar el auto (completo)",7000,1],
  ["Jardín","Regar el patio",2500,1],["Jardín","Juntar caca de Roma",1500,1],
  ["Lavandería","Colgar ropa lavada",1500,1],
  ["Tareas especiales","Tarea pedida por papá o Lara (acordar antes)",2500,1]];
@@ -151,7 +151,7 @@ function _initDB(){
   const d={allowed:{},tasks:{},config:{},logs:{},photos:{},closings:{}};
   d.allowed["emilia@demo.test"]={nombre:"Emilia",rol:"hija"};
   d.allowed["luz@demo.test"]={nombre:"Luz",rol:"hija"};
-  _seedTasks.forEach((t,i)=>{ d.tasks["t"+String(i+1).padStart(2,"0")]={categoria:t[0],nombre:t[1],precio:t[2],max:t[3],grupo:t[4]||"",activa:true,orden:i+1}; });
+  _seedTasks.forEach((t,i)=>{ d.tasks["t"+String(i+1).padStart(2,"0")]={categoria:t[0],nombre:t[1],precio:t[2],max:t[3],activa:true,orden:i+1}; });
   return d;
 }
 let _DB=null; try{ _DB=JSON.parse(localStorage.getItem("demoDB")); }catch(e){}
@@ -321,11 +321,9 @@ function stats(email, mes){
   const okWeeks = Object.entries(weeks).filter(([k,c]) => k.slice(0,7) === mes && c >= S.cfg.N).length;
   return { dinero, tareas: ap.length, puntos: r1(base + okWeeks * S.cfg.pSemana), semanasOk: okWeeks, weeks };
 }
-function usedToday(taskId, grupo){
+function usedToday(taskId){
   const t = today();
-  const mine = allLogs().filter(l => l.dia === t && l.quienes.includes(S.email));
-  return { same: mine.filter(l => l.taskId === taskId).length,
-           group: grupo ? mine.filter(l => l.grupo === grupo && l.taskId !== taskId).length : 0 };
+  return allLogs().filter(l => l.dia === t && l.taskId === taskId && l.quienes.includes(S.email)).length;
 }
 
 /* ---------- vistas ---------- */
@@ -403,11 +401,10 @@ function vTomar(){
   if (!tasks.length) return `<div class="empty">Papá todavía no cargó tareas.</div>`;
   const cats = [...new Set(tasks.map(t=>t.categoria))];
   return cats.map(c => `<div class="cat">${esc(c)}</div>` + tasks.filter(t=>t.categoria===c).map(t => {
-    const u = usedToday(t.id, t.grupo);
     const max = t.max || 1;
-    const blocked = u.same >= max || u.group > 0;
+    const blocked = usedToday(t.id) >= max;
     return `<button class="task" data-act="take" data-id="${t.id}" ${blocked?"disabled":""}>
-      <span><span class="t">${esc(t.nombre)}</span>${blocked?`<span class="muted small"><br>${u.group>0?"Ya hiciste otra versión hoy":"Máximo de hoy alcanzado"}</span>`:(max>1?`<span class="muted small"><br>Hasta ${max} veces por día</span>`:"")}</span>
+      <span><span class="t">${esc(t.nombre)}</span>${blocked?`<span class="muted small"><br>Máximo de hoy alcanzado</span>`:(max>1?`<span class="muted small"><br>Hasta ${max} veces por día</span>`:"")}</span>
       <span class="price">${money(t.precio)}</span></button>`; }).join("")).join("");
 }
 
@@ -451,20 +448,27 @@ function vResumen(){
     <div class="muted small">${r.tareas} tareas aprobadas · ${r.puntos} puntos</div></div>`).join("") || `<div class="empty">Sin hijas cargadas.</div>`}`;
 }
 
+function catOptions(sel){
+  const cats = [...new Set([...S.tasks].sort((a,b)=>(a.orden||0)-(b.orden||0)).map(t=>t.categoria).filter(Boolean))];
+  if (sel && !cats.includes(sel)) cats.push(sel);
+  return cats.map(c=>`<option value="${esc(c)}" ${c===sel?"selected":""}>${esc(c)}</option>`).join("")
+    + `<option value="__nueva__">+ Nueva categoría…</option>`;
+}
+
 function vTareas(){
   const tasks = [...S.tasks].sort((a,b)=> (a.orden||0)-(b.orden||0));
   return `<h2>Tareas y precios</h2>
   ${tasks.length ? "" : `<div class="empty">No hay tareas. Cargá las iniciales desde Ajustes.</div>`}
   ${tasks.map(t => `<div class="card" data-tid="${t.id}">
     <label class="f" style="margin-top:0">Nombre</label><input type="text" data-f="nombre" value="${esc(t.nombre)}">
-    <div class="grid2"><div><label class="f">Categoría</label><input type="text" data-f="categoria" value="${esc(t.categoria)}"></div>
+    <div class="grid2"><div><label class="f">Categoría</label><select data-f="categoria">${catOptions(t.categoria)}</select></div>
     <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" data-f="precio" value="${t.precio}"></div></div>
-    <div class="grid2"><div><label class="f">Máx. por día</label><input type="number" inputmode="numeric" data-f="max" value="${t.max||1}"></div>
-    <div><label class="f">Grupo excluyente</label><input type="text" data-f="grupo" value="${esc(t.grupo||"")}" placeholder="ej: auto"></div></div>
-    <div class="chk"><input type="checkbox" id="a_${t.id}" data-f="activa" ${t.activa!==false?"checked":""}><label for="a_${t.id}">Activa</label></div></div>`).join("")}
+    <label class="f">Máx. por día</label><input type="number" inputmode="numeric" data-f="max" value="${t.max||1}">
+    <div class="chk"><input type="checkbox" id="a_${t.id}" data-f="activa" ${t.activa!==false?"checked":""}><label for="a_${t.id}">Activa</label></div>
+    <div class="actions"><button class="btn ghost sm" data-act="deltask" data-id="${t.id}">Eliminar tarea</button></div></div>`).join("")}
   <div class="card"><h3>Agregar tarea</h3>
     <label class="f">Nombre</label><input type="text" id="nt_nombre">
-    <div class="grid2"><div><label class="f">Categoría</label><input type="text" id="nt_cat"></div>
+    <div class="grid2"><div><label class="f">Categoría</label><select id="nt_cat">${catOptions("")}</select></div>
     <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" id="nt_precio"></div></div>
     <div class="actions"><button class="btn" data-act="addtask">Agregar</button></div></div>`;
 }
@@ -496,8 +500,8 @@ function vAjustes(){
     <label class="f">Nombre</label><input type="text" id="al_nombre">
     <label class="f">Mail de Google</label><input type="email" id="al_email" autocapitalize="off">
     <div class="actions"><button class="btn" data-act="addallowed">Agregar</button></div></div>
-  <h2>Datos iniciales</h2><div class="card"><p class="muted small" style="margin-top:0">Carga la lista de tareas depurada (sin las de Luca Enzo). Reemplaza tareas con el mismo identificador.</p>
-    <div class="actions"><button class="btn ghost" data-act="seed">Cargar tareas iniciales</button></div></div>`;
+  ${S.tasks.length ? "" : `<h2>Datos iniciales</h2><div class="card"><p class="muted small" style="margin-top:0">Carga la lista de tareas inicial. Solo aparece mientras no haya ninguna tarea.</p>
+    <div class="actions"><button class="btn ghost" data-act="seed">Cargar tareas iniciales</button></div></div>`}`;
 }
 
 /* ---------- fotos ---------- */
@@ -557,6 +561,14 @@ document.addEventListener("change", async e => {
     catch(err){ fail(err); }
   } else if (t.id === "sh") { $("#shwrap").hidden = !t.checked; S.draft.shared = t.checked; }
   else if (t.dataset.act === "mes") { if (t.value) { S.mes = t.value; subLogs(); render(); } }
+  else if ((t.dataset.f === "categoria" || t.id === "nt_cat") && t.value === "__nueva__") {
+    const n = (prompt("Nombre de la nueva categoría") || "").trim();
+    if (t.id === "nt_cat") {
+      if (!n) { t.selectedIndex = 0; return; }
+      const o = document.createElement("option"); o.value = o.textContent = n; t.insertBefore(o, t.lastElementChild); t.value = n;
+    } else if (!n) { t.blur(); S.dirty = false; render(); }
+    else { try { await updateDoc(doc(db,"tasks",t.closest("[data-tid]").dataset.tid), { categoria:n }); toast("Guardado"); } catch(err){ fail(err); } }
+  }
   else if (t.dataset.f && t.closest("[data-tid]")) {
     const id = t.closest("[data-tid]").dataset.tid, f = t.dataset.f;
     let v = t.type === "checkbox" ? t.checked : t.value;
@@ -591,7 +603,7 @@ document.addEventListener("click", async e => {
         if (d.shared) quienes.push($("#shwho").value);
         const ref = doc(collection(db,"logs"));
         batch.set(doc(db,"photos",ref.id), { quienes, data:d.photo });
-        batch.set(ref, { taskId:t.id, nombre:t.nombre, categoria:t.categoria, precio:t.precio, grupo:t.grupo||"",
+        batch.set(ref, { taskId:t.id, nombre:t.nombre, categoria:t.categoria, precio:t.precio,
           quienes, dia:today(), creadoEn:Date.now(), status:"pendiente", rechazos:0, comentario:"", pago:0 });
       }
       await batch.commit(); closeDlg(); toast("Enviado. Papá lo revisa pronto.");
@@ -628,11 +640,18 @@ document.addEventListener("click", async e => {
         <div class="actions"><button class="btn ghost" data-act="cancel">Cancelar</button><button class="btn" data-act="pagogo">Guardar</button></div>`);
     }
     if (act === "pagogo") { await updateDoc(doc(db,"logs",S.draft.id), { pago: Math.max(0, Number($("#pg").value)||0) }); closeDlg(); toast("Guardado"); }
+    if (act === "deltask") {
+      const t = S.tasks.find(x => x.id === id); if (!t) return;
+      if (confirm(`¿Eliminar "${t.nombre}"? No se puede deshacer. Lo que ya se hizo con esta tarea queda en el historial.`)) {
+        await deleteDoc(doc(db,"tasks",id)); toast("Tarea eliminada");
+      }
+    }
     if (act === "addtask") {
-      const nombre = $("#nt_nombre").value.trim(), categoria = $("#nt_cat").value.trim() || "Otras", precio = Number($("#nt_precio").value);
+      const nombre = $("#nt_nombre").value.trim(), categoria = $("#nt_cat").value, precio = Number($("#nt_precio").value);
       if (!nombre || !(precio >= 0)) return toast("Falta nombre o precio.");
+      if (categoria === "__nueva__") return toast("Elegí o creá una categoría.");
       const ref = doc(collection(db,"tasks"));
-      await setDoc(ref, { nombre, categoria, precio, max:1, grupo:"", activa:true, orden:Date.now() }); toast("Agregada");
+      await setDoc(ref, { nombre, categoria, precio, max:1, activa:true, orden:Date.now() }); toast("Agregada");
     }
     if (act === "close") {
       const email = b.dataset.email, st = stats(email, S.mes); S.draft = { email, total:st.dinero, tareas:st.tareas };
@@ -668,14 +687,14 @@ async function seed(){
     ["Cocina","Preparar una ensalada",1500,1],["Cocina","Preparar una comida sencilla para la familia",3500,1],
     ["Su cuarto","Hacer la cama",1500,1],["Su cuarto","Ordenar la pieza (sin cama ni aspirado)",2500,1],["Su cuarto","Aspirar su pieza",1500,1],
     ["Limpieza general","Aspirar la casa (sin tu pieza)",2000,1],["Limpieza general","Barrer la cochera",2000,1],
-    ["Limpieza general","Lavar el auto (solo exterior)",3500,1,"auto"],["Limpieza general","Lavar el auto (completo)",7000,1,"auto"],
+    ["Limpieza general","Lavar el auto (solo exterior)",3500,1],["Limpieza general","Lavar el auto (completo)",7000,1],
     ["Jardín","Regar el patio",2500,1],["Jardín","Juntar caca de Roma",1500,1],
     ["Lavandería","Colgar ropa lavada",1500,1],
     ["Tareas especiales","Tarea pedida por papá o Lara (acordar antes)",2500,1]
   ];
   const batch = writeBatch(db);
   T.forEach((t,i) => batch.set(doc(db,"tasks","t"+String(i+1).padStart(2,"0")),
-    { categoria:t[0], nombre:t[1], precio:t[2], max:t[3], grupo:t[4]||"", activa:true, orden:i+1 }));
+    { categoria:t[0], nombre:t[1], precio:t[2], max:t[3], activa:true, orden:i+1 }));
   await batch.commit(); toast("Tareas cargadas");
 }
 

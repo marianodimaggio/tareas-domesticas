@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi caja PRUEBA</title>
+<meta name="theme-color" content="#12203A">
+<meta name="color-scheme" content="light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi caja PRUEBA">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF1F3; --card:#FFFFFF; --ink:#12203A; --muted:#5B6B80; --line:#D5DDE3;
+  --money:#0E8A6B; --money-bg:#DDF3EC; --alert:#C8452D; --alert-bg:#FBE4DE;
+  --mark:#F5C842; --wait-bg:#E6EBF5; --wait:#34508F;
+  --r:14px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;padding-top:22px;min-height:100%;background:var(--paper);color:var(--ink);
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;line-height:1.15}
+h2{font-size:1.15rem;font-weight:800;margin:22px 0 10px}
+h3{font-size:1rem;font-weight:600}
+.wrap{max-width:640px;margin:0 auto;padding:12px 16px calc(92px + env(safe-area-inset-bottom,0px))}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 4px}
+header.top .who{font-weight:800;font-size:1.25rem}
+header.top .who small{display:block;font-weight:400;color:var(--muted);font-size:.8rem}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;padding:8px;cursor:pointer}
+.monthbar{display:flex;align-items:center;gap:10px;margin:8px 0 4px}
+.monthbar input{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px}
+
+/* saldo */
+.till{background:var(--ink);color:#fff;border-radius:var(--r);padding:20px 20px 16px;margin:10px 0 6px;
+  border-bottom:3px dashed var(--mark)}
+.till .lbl{opacity:.75;font-size:.9rem}
+.till .big{font-size:3rem;font-weight:800;color:var(--mark);letter-spacing:-.02em;line-height:1.05;margin:2px 0 8px}
+.till .row{display:flex;gap:18px;flex-wrap:wrap;font-size:.95rem}
+.till .row b{font-weight:800}
+.paid{display:inline-block;margin-top:8px;background:var(--money-bg);color:var(--money);border-radius:8px;padding:3px 10px;font-weight:600;font-size:.85rem}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 10px}
+.card .head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.price{font-weight:800;color:var(--money);white-space:nowrap}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.chip{display:inline-block;border-radius:8px;padding:2px 9px;font-size:.8rem;font-weight:600}
+.chip.pendiente{background:var(--wait-bg);color:var(--wait)}
+.chip.rechazada{background:var(--alert-bg);color:var(--alert)}
+.chip.aprobada{background:var(--money-bg);color:var(--money)}
+.chip.resuelta{background:#EFE8D2;color:#7A5B00}
+.note{background:var(--alert-bg);border-left:4px solid var(--alert);padding:8px 10px;border-radius:6px;margin:8px 0;font-size:.95rem}
+
+button.btn{background:var(--ink);color:#fff;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;min-height:46px}
+button.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+button.btn.ok{background:var(--money)}
+button.btn.bad{background:var(--alert)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+button.btn.sm{padding:8px 12px;min-height:38px;font-size:.9rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.actions .btn{flex:1}
+:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+
+/* ranking */
+.rank{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rank:last-child{border-bottom:0}
+.rank .pos{font-weight:800;font-size:1.4rem;width:28px;text-align:center}
+.rank .nm{flex:1;font-weight:600}
+.rank .pt{font-weight:800}
+.rank.me .nm::after{content:" (vos)";font-weight:400;color:var(--muted)}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--mark)}
+
+/* tomar tarea */
+.cat{font-weight:800;margin:20px 0 8px}
+.task{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 8px;cursor:pointer}
+.task:disabled{opacity:.5;cursor:not-allowed}
+.task .t{font-weight:600}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
+  display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+nav.tabs button{flex:1;background:none;border:0;padding:10px 4px;font-weight:600;color:var(--muted);border-radius:10px;cursor:pointer;position:relative}
+nav.tabs button[aria-current="page"]{color:var(--ink);background:var(--paper)}
+nav.tabs .badge{position:absolute;top:2px;right:18%;background:var(--alert);color:#fff;border-radius:10px;font-size:.7rem;padding:1px 6px}
+
+/* forms */
+label.f{display:block;margin:10px 0 4px;font-weight:600;font-size:.9rem}
+input[type=text],input[type=email],input[type=number],input[type=month],select,textarea{width:100%;border:1px solid var(--line);
+  background:#fff;border-radius:10px;padding:10px 12px}
+textarea{min-height:90px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.trow{display:grid;grid-template-columns:1fr 90px;gap:8px;margin-bottom:6px}
+.trow2{display:grid;grid-template-columns:70px 1fr 70px;gap:8px;align-items:center}
+.chk{display:flex;align-items:center;gap:10px;margin:12px 0}
+.chk input{width:22px;height:22px}
+
+dialog{border:0;border-radius:18px;padding:18px;width:min(92vw,460px);max-height:90vh;color:var(--ink)}
+dialog::backdrop{background:rgba(18,32,58,.55)}
+.photo{width:100%;border-radius:12px;display:block;margin:8px 0;background:var(--line);min-height:120px;object-fit:contain;max-height:60vh}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;display:none}
+.center{min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;padding:24px}
+.center h1{font-size:2.4rem;font-weight:800}
+.empty{color:var(--muted);text-align:center;padding:26px 10px}
+@media (prefers-reduced-motion:no-preference){ .toast{transition:opacity .2s} }
+@media (min-width:700px){ .wrap{padding-top:24px} }
+</style>
+</head>
+<body>
+<div style="position:fixed;top:0;left:0;right:0;background:#C8452D;color:#fff;text-align:center;font-size:.75rem;padding:3px;z-index:30">MODO PRUEBA · datos solo en este celular, nada se guarda en Firebase</div>
+<div id="app"></div>
+<div class="toast" id="toast" role="status"></div>
+<dialog id="dlg"></dialog>
+
+<script type="module">
+/* =====================================================================
+   CONFIGURACIÓN: completá estas dos cosas (ver LEEME.md)
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBckAsrq_NOC-GvgFx8sxmVPMCVuTexjaU",
+  authDomain: "tareas-domesticas-26ed7.firebaseapp.com",
+  projectId: "tareas-domesticas-26ed7",
+  appId: "1:208325810386:web:8408933aeb41b6f7d1750b"
+};
+const ADMIN_EMAIL = "papa@demo.test";   // tu mail de Google (en minúsculas)
+/* ===================================================================== */
+
+
+/* ===== MODO PRUEBA: Firebase simulado, datos guardados solo en este celular ===== */
+const _seedTasks=[
+ ["Cocina","Poner la mesa",1000,2],["Cocina","Levantar y limpiar la mesa",1500,2],
+ ["Cocina","Lavar los platos y cubiertos",2500,2],["Cocina","Lavar ollas y fuentes",1000,2],
+ ["Cocina","Preparar una ensalada",1500,1],["Cocina","Preparar una comida sencilla para la familia",3500,1],
+ ["Su cuarto","Hacer la cama",1500,1],["Su cuarto","Ordenar la pieza (sin cama ni aspirado)",2500,1],["Su cuarto","Aspirar su pieza",1500,1],
+ ["Limpieza general","Aspirar la casa (sin tu pieza)",2000,1],["Limpieza general","Barrer la cochera",2000,1],
+ ["Limpieza general","Lavar el auto (solo exterior)",3500,1,"auto"],["Limpieza general","Lavar el auto (completo)",7000,1,"auto"],
+ ["Jardín","Regar el patio",2500,1],["Jardín","Juntar caca de Roma",1500,1],
+ ["Lavandería","Colgar ropa lavada",1500,1],
+ ["Tareas especiales","Tarea pedida por papá o Lara (acordar antes)",2500,1]];
+function _initDB(){
+  const d={allowed:{},tasks:{},config:{},logs:{},photos:{},closings:{}};
+  d.allowed["emilia@demo.test"]={nombre:"Emilia",rol:"hija"};
+  d.allowed["luz@demo.test"]={nombre:"Luz",rol:"hija"};
+  _seedTasks.forEach((t,i)=>{ d.tasks["t"+String(i+1).padStart(2,"0")]={categoria:t[0],nombre:t[1],precio:t[2],max:t[3],grupo:t[4]||"",activa:true,orden:i+1}; });
+  return d;
+}
+let _DB=null; try{ _DB=JSON.parse(localStorage.getItem("demoDB")); }catch(e){}
+if(!_DB) _DB=_initDB();
+const _clone=o=>JSON.parse(JSON.stringify(o));
+const _save=()=>{ try{ localStorage.setItem("demoDB",JSON.stringify(_DB)); }catch(e){ console.warn("Almacenamiento lleno"); } };
+const _listeners=new Set();
+const _notify=()=>{ _save(); setTimeout(()=>_listeners.forEach(f=>f()),0); };
+let _autoN=0;
+const initializeApp=()=>({}); const getAuth=()=>({}); const getFirestore=()=>({});
+class GoogleAuthProvider{ setCustomParameters(){} }
+const collection=(db,name)=>({t:"col",name});
+const doc=(a,b,c)=>{ if(a.t==="col") return {t:"doc",col:a.name,id:"d"+Date.now().toString(36)+(_autoN++)}; return {t:"doc",col:b,id:c}; };
+const where=(field,op,val)=>({field,op,val});
+const query=(c,...cons)=>({t:"q",col:c.name,cons});
+const _match=(d,cons)=>cons.every(({field,op,val})=>{ const v=d[field];
+  if(op==="==") return v===val; if(op==="in") return val.includes(v);
+  if(op===">=") return v>=val; if(op==="<=") return v<=val; return false; });
+const _snapCol=ref=>{ const cons=ref.t==="q"?ref.cons:[];
+  const docs=Object.entries(_DB[ref.col]).filter(([id,d])=>_match(d,cons)).map(([id,d])=>({id,data:()=>_clone(d)}));
+  return {docs,forEach:f=>docs.forEach(f)}; };
+const _snapDoc=ref=>{ const d=_DB[ref.col][ref.id]; return {id:ref.id,exists:()=>d!==undefined,data:()=>d===undefined?undefined:_clone(d)}; };
+const onSnapshot=(ref,cb)=>{ const run=()=>cb(ref.t==="doc"?_snapDoc(ref):_snapCol(ref)); _listeners.add(run); setTimeout(run,0); return ()=>_listeners.delete(run); };
+const getDoc=async ref=>_snapDoc(ref);
+const setDoc=async(ref,data)=>{ _DB[ref.col][ref.id]=_clone(data); _notify(); };
+const updateDoc=async(ref,patch)=>{ if(!_DB[ref.col][ref.id]) throw Object.assign(new Error("El documento no existe"),{code:"not-found"}); Object.assign(_DB[ref.col][ref.id],_clone(patch)); _notify(); };
+const deleteDoc=async ref=>{ delete _DB[ref.col][ref.id]; _notify(); };
+const writeBatch=()=>{ const ops=[]; return {
+  set:(r,d)=>ops.push(()=>{ _DB[r.col][r.id]=_clone(d); }),
+  update:(r,p)=>ops.push(()=>{ if(!_DB[r.col][r.id]) throw new Error("El documento no existe"); Object.assign(_DB[r.col][r.id],_clone(p)); }),
+  delete:r=>ops.push(()=>{ delete _DB[r.col][r.id]; }),
+  commit:async()=>{ ops.forEach(f=>f()); _notify(); } }; };
+let _user=null; try{ const e=localStorage.getItem("demoUser"); if(e) _user={email:e}; }catch(e){}
+const _authCbs=new Set();
+const onAuthStateChanged=(a,cb)=>{ _authCbs.add(cb); setTimeout(()=>cb(_user),0); return ()=>_authCbs.delete(cb); };
+const signInWithPopup=async()=>{ _user={email:window.__who}; localStorage.setItem("demoUser",_user.email); _authCbs.forEach(f=>f(_user)); };
+const signInWithRedirect=signInWithPopup;
+const getRedirectResult=async()=>null;
+const signOut=async()=>{ _user=null; localStorage.removeItem("demoUser"); _authCbs.forEach(f=>f(null)); };
+/* ===== fin del modo prueba ===== */
+
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const money = n => "$" + Math.round(n).toLocaleString("es-AR");
+const pad = n => String(n).padStart(2, "0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => ymd(new Date());
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const mondayKey = s => { const d = parse(s); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return ymd(d); };
+const r1 = n => Math.round(n*10)/10;
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const mesLabel = m => { const [y,mm] = m.split("-"); return `${MESES[+mm-1]} ${y}`; };
+const ESTADO = { pendiente:"En revisión", rechazada:"Para corregir", aprobada:"Aprobada", resuelta:"Resuelta por papá" };
+let toastTimer;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display="none",3500); }
+function fail(e){ console.error(e); toast(e.code==="permission-denied" ? "Sin permiso: revisá las reglas de Firestore." : (e.message||"Algo falló")); }
+
+/* ---------- PWA: ícono y manifest generados en el navegador ---------- */
+(function pwa(){
+  try{
+    const c=document.createElement("canvas"); c.width=c.height=512; const x=c.getContext("2d");
+    x.fillStyle="#C8452D"; x.fillRect(0,0,512,512);
+    x.fillStyle="#F5C842"; x.beginPath(); x.arc(256,256,150,0,Math.PI*2); x.fill();
+    x.fillStyle="#C8452D"; x.font="800 190px system-ui,sans-serif"; x.textAlign="center"; x.textBaseline="middle"; x.fillText("$",256,270);
+    const icon=c.toDataURL("image/png");
+    const l=document.createElement("link"); l.rel="apple-touch-icon"; l.href=icon; document.head.appendChild(l);
+    const man={name:"Mi caja PRUEBA",short_name:"PRUEBA",display:"standalone",background_color:"#EDF1F3",theme_color:"#12203A",
+      start_url:location.href.split("#")[0],icons:[{src:icon,sizes:"512x512",type:"image/png"}]};
+    const m=document.createElement("link"); m.rel="manifest";
+    m.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:"application/manifest+json"})); document.head.appendChild(m);
+  }catch(e){}
+})();
+
+/* ---------- arranque ---------- */
+const app = $("#app");
+if (FIREBASE_CONFIG.apiKey === "PEGAR_AQUI") {
+  app.innerHTML = `<div class="center"><h1>Falta configurar</h1><p class="muted">Pegá tu firebaseConfig y tu mail en <b>index.html</b>. Los pasos están en LEEME.md.</p></div>`;
+  throw new Error("Falta firebaseConfig");
+}
+const fb = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(fb);
+const db = getFirestore(fb);
+
+const S = {
+  email:null, nombre:"", isAdmin:false, ready:false, denied:false,
+  tab:"inicio", mes: today().slice(0,7),
+  allowed:[], tasks:[], cfg:{ N:5, pTarea:1, pPrimera:0.5, pSemana:5 },
+  lr:new Map(), lo:new Map(), lt:new Map(), closings:[], photos:new Map(), draft:null
+};
+const hijas = () => S.allowed.filter(a => a.rol === "hija");
+const nombreDe = e => e === ADMIN_EMAIL ? "Papá" : (S.allowed.find(a => a.id === e)?.nombre || e);
+const allLogs = () => [...new Map([...S.lr, ...S.lo, ...S.lt]).values()];
+
+/* ---------- login ---------- */
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt:"select_account" });
+async function login(who){
+  try { window.__who = who; await signInWithPopup(auth, provider); }
+  catch(e){
+    if (["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(e.code))
+      { try { await signInWithRedirect(auth, provider); } catch(e2){ fail(e2); } }
+    else if (e.code !== "auth/popup-closed-by-user") fail(e);
+  }
+}
+getRedirectResult(auth).catch(fail);
+
+let subs = [];
+function clearSubs(){ subs.forEach(u => u()); subs = []; }
+let unsubRange = null;
+
+onAuthStateChanged(auth, async user => {
+  clearSubs(); unsubRange && unsubRange(); unsubRange = null;
+  S.ready = false; S.denied = false;
+  if (!user) { S.email = null; render(); return; }
+  S.email = (user.email || "").toLowerCase();
+  S.isAdmin = S.email === ADMIN_EMAIL;
+  S.tab = S.isAdmin ? "pendientes" : "inicio";
+  try {
+    if (!S.isAdmin) {
+      const me = await getDoc(doc(db, "allowed", S.email));
+      if (!me.exists()) { S.denied = true; render(); return; }
+      S.nombre = me.data().nombre;
+    } else S.nombre = "Papá";
+    startListeners();
+    S.ready = true; render();
+  } catch(e){ fail(e); S.denied = true; render(); }
+});
+
+function startListeners(){
+  subs.push(onSnapshot(collection(db,"allowed"), s => { S.allowed = s.docs.map(d=>({id:d.id,...d.data()})); render(); }, fail));
+  subs.push(onSnapshot(collection(db,"tasks"), s => { S.tasks = s.docs.map(d=>({id:d.id,...d.data()})); render(); }, fail));
+  subs.push(onSnapshot(doc(db,"config","main"), s => { if (s.exists()) S.cfg = { ...S.cfg, ...s.data() }; render(); }, fail));
+  subs.push(onSnapshot(query(collection(db,"logs"), where("status","in",["pendiente","rechazada"])),
+    s => { S.lo = new Map(s.docs.map(d=>[d.id,{id:d.id,...d.data()}])); render(); }, fail));
+  subs.push(onSnapshot(query(collection(db,"logs"), where("dia","==",today())),
+    s => { S.lt = new Map(s.docs.map(d=>[d.id,{id:d.id,...d.data()}])); render(); }, fail));
+  const cq = S.isAdmin ? collection(db,"closings") : query(collection(db,"closings"), where("email","==",S.email));
+  subs.push(onSnapshot(cq, s => { S.closings = s.docs.map(d=>({id:d.id,...d.data()})); render(); }, fail));
+  subLogs();
+}
+function subLogs(){
+  unsubRange && unsubRange();
+  const first = S.mes + "-01";
+  const a = mondayKey(first);
+  const e = parse(first); e.setDate(e.getDate() + 38);
+  unsubRange = onSnapshot(query(collection(db,"logs"), where("dia",">=",a), where("dia","<=",ymd(e))),
+    s => { S.lr = new Map(s.docs.map(d=>[d.id,{id:d.id,...d.data()}])); render(); }, fail);
+}
+
+/* ---------- cálculos ---------- */
+function valor(l, email){
+  const n = l.quienes.length;
+  if (l.status === "aprobada") return l.precio / n;
+  if (l.status === "resuelta") return (l.pago || 0) / n;
+  return 0;
+}
+function stats(email, mes){
+  const mine = allLogs().filter(l => l.quienes.includes(email));
+  const done = mine.filter(l => l.status === "aprobada");
+  const inMes = mine.filter(l => l.dia.slice(0,7) === mes);
+  const dinero = inMes.reduce((s,l)=>s+valor(l,email),0);
+  const ap = inMes.filter(l => l.status === "aprobada");
+  const base = ap.reduce((s,l)=> s + (S.cfg.pTarea + (l.rechazos===0 ? S.cfg.pPrimera : 0)) / l.quienes.length, 0);
+  const weeks = {};
+  done.forEach(l => { const k = mondayKey(l.dia); weeks[k] = (weeks[k]||0) + 1; });
+  const okWeeks = Object.entries(weeks).filter(([k,c]) => k.slice(0,7) === mes && c >= S.cfg.N).length;
+  return { dinero, tareas: ap.length, puntos: r1(base + okWeeks * S.cfg.pSemana), semanasOk: okWeeks, weeks };
+}
+function usedToday(taskId, grupo){
+  const t = today();
+  const mine = allLogs().filter(l => l.dia === t && l.quienes.includes(S.email));
+  return { same: mine.filter(l => l.taskId === taskId).length,
+           group: grupo ? mine.filter(l => l.grupo === grupo && l.taskId !== taskId).length : 0 };
+}
+
+/* ---------- vistas ---------- */
+function render(){
+  if (document.activeElement?.closest?.("#app input, #app select") && S.tab==="tareas" && !$("#dlg").open) { S.dirty = true; return; }
+  S.dirty = false;
+  if (!S.email) {
+    app.innerHTML = `<div class="center"><h1>Mi caja</h1><p class="muted">Cada tarea hecha suma a tu caja del mes.</p>
+      <p class="small"><b>Elegí con quién probar</b></p>
+      <button class="btn" data-act="login" data-who="papa@demo.test">Entrar como Papá</button>
+      <button class="btn ghost" data-act="login" data-who="emilia@demo.test">Entrar como Emilia</button>
+      <button class="btn ghost" data-act="login" data-who="luz@demo.test">Entrar como Luz</button>
+      <button class="linkbtn" data-act="demoreset">Borrar datos de prueba</button></div>`;
+    return;
+  }
+  if (S.denied) {
+    app.innerHTML = `<div class="center"><h1>Sin acceso</h1><p class="muted">${esc(S.email)} no está autorizado. Pedile a papá que cargue este mail.</p>
+      <button class="btn ghost" data-act="logout">Salir</button></div>`;
+    return;
+  }
+  if (!S.ready) { app.innerHTML = `<div class="center muted">Cargando…</div>`; return; }
+  const tabs = S.isAdmin
+    ? [["pendientes","Pendientes"],["resumen","Resumen"],["tareas","Tareas"],["cierre","Cierre"],["ajustes","Ajustes"]]
+    : [["inicio","Inicio"],["tomar","Tareas"],["historial","Historial"]];
+  const pend = allLogs().filter(l => l.status === "pendiente").length;
+  const view = ({ inicio:vInicio, tomar:vTomar, historial:vHistorial, pendientes:vPendientes,
+                  resumen:vResumen, tareas:vTareas, cierre:vCierre, ajustes:vAjustes })[S.tab]();
+  app.innerHTML = `<div class="wrap">
+    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"}</small></div>
+    <button class="linkbtn" data-act="logout">Salir</button></header>
+    ${view}</div>
+    <nav class="tabs" aria-label="Secciones">${tabs.map(([k,n]) =>
+      `<button data-act="tab" data-tab="${k}" ${S.tab===k?'aria-current="page"':""}>${n}${k==="pendientes"&&pend?`<span class="badge">${pend}</span>`:""}</button>`).join("")}</nav>`;
+  fillPhotos();
+}
+
+function monthBar(){
+  return `<div class="monthbar"><label for="mes" class="muted small">Mes</label>
+    <input type="month" id="mes" value="${S.mes}" data-act="mes"></div>`;
+}
+function rankingHtml(){
+  const rows = hijas().map(h => ({ ...h, ...stats(h.id, S.mes) })).sort((a,b)=> b.puntos - a.puntos || b.tareas - a.tareas);
+  if (!rows.length) return `<div class="empty">Todavía no hay hijas cargadas.</div>`;
+  return `<div class="card">${rows.map((r,i)=>`<div class="rank ${r.id===S.email?"me":""}">
+    <div class="pos">${i+1}</div><div class="nm">${esc(r.nombre)}<div class="muted small">${r.tareas} tareas · ${r.semanasOk} semanas constantes</div></div>
+    <div class="pt">${r.puntos} pts</div></div>`).join("")}</div>
+    <p class="muted small">Puntos: ${S.cfg.pTarea} por tarea, +${S.cfg.pPrimera} si salió al primer intento, +${S.cfg.pSemana} por cada semana con ${S.cfg.N} tareas aprobadas o más. Las tareas compartidas se dividen.</p>`;
+}
+
+function vInicio(){
+  const st = stats(S.email, S.mes);
+  const cl = S.closings.find(c => c.id === `${S.email}_${S.mes}`);
+  const wk = mondayKey(today());
+  const wkCount = st.weeks[wk] || 0;
+  const mine = allLogs().filter(l => l.quienes.includes(S.email));
+  const fix = mine.filter(l => l.status === "rechazada");
+  const wait = mine.filter(l => l.status === "pendiente");
+  return `${monthBar()}
+  <div class="till"><div class="lbl">A cobrar en ${mesLabel(S.mes)}</div><div class="big">${money(st.dinero)}</div>
+    <div class="row"><span><b>${st.tareas}</b> tareas aprobadas</span><span><b>${st.puntos}</b> puntos</span></div>
+    ${cl ? `<span class="paid">Cobrado · ${esc(cl.metodo)}</span>`:""}</div>
+  ${S.mes === today().slice(0,7) ? `<div class="card"><h3>Esta semana: ${wkCount} de ${S.cfg.N} tareas</h3>
+    <div class="bar" aria-hidden="true"><i style="width:${Math.min(100,wkCount/S.cfg.N*100)}%"></i></div>
+    <p class="muted small" style="margin:6px 0 0">${wkCount>=S.cfg.N?"Semana constante lograda.":"Llegá a "+S.cfg.N+" para sumar el bonus de constancia."}</p></div>`:""}
+  ${fix.length ? `<h2>Para corregir</h2>${fix.map(l=>`<div class="card"><div class="head"><h3>${esc(l.nombre)}</h3><span class="chip rechazada">${ESTADO.rechazada}</span></div>
+    <div class="note">${esc(l.comentario)}</div>
+    <p class="muted small" style="margin:0">Te queda ${2-l.rechazos} intento${2-l.rechazos===1?"":"s"} antes de que lo resuelva papá.</p>
+    <div class="actions"><button class="btn" data-act="fix" data-id="${l.id}">Corregir y mandar nueva foto</button></div></div>`).join("")}`:""}
+  ${wait.length ? `<h2>En revisión</h2>${wait.map(l=>`<div class="card"><div class="head"><h3>${esc(l.nombre)}</h3><span class="chip pendiente">${ESTADO.pendiente}</span></div></div>`).join("")}`:""}
+  <h2>Ranking de ${mesLabel(S.mes)}</h2>${rankingHtml()}`;
+}
+
+function vTomar(){
+  const tasks = S.tasks.filter(t => t.activa !== false).sort((a,b)=> (a.orden||0)-(b.orden||0));
+  if (!tasks.length) return `<div class="empty">Papá todavía no cargó tareas.</div>`;
+  const cats = [...new Set(tasks.map(t=>t.categoria))];
+  return cats.map(c => `<div class="cat">${esc(c)}</div>` + tasks.filter(t=>t.categoria===c).map(t => {
+    const u = usedToday(t.id, t.grupo);
+    const max = t.max || 1;
+    const blocked = u.same >= max || u.group > 0;
+    return `<button class="task" data-act="take" data-id="${t.id}" ${blocked?"disabled":""}>
+      <span><span class="t">${esc(t.nombre)}</span>${blocked?`<span class="muted small"><br>${u.group>0?"Ya hiciste otra versión hoy":"Máximo de hoy alcanzado"}</span>`:(max>1?`<span class="muted small"><br>Hasta ${max} veces por día</span>`:"")}</span>
+      <span class="price">${money(t.precio)}</span></button>`; }).join("")).join("");
+}
+
+function vHistorial(){
+  const st = stats(S.email, S.mes);
+  const mine = allLogs().filter(l => l.quienes.includes(S.email) && l.dia.slice(0,7) === S.mes).sort((a,b)=> b.creadoEn - a.creadoEn);
+  return `${monthBar()}
+  <div class="card"><div class="head"><h3>Total del mes</h3><span class="price">${money(st.dinero)}</span></div>
+  <p class="muted small" style="margin:4px 0 0">${st.tareas} tareas aprobadas</p></div>
+  ${mine.length ? mine.map(l => `<div class="card"><div class="head"><div><h3>${esc(l.nombre)}</h3>
+    <div class="muted small">${l.dia.split("-").reverse().join("/")}${l.quienes.length>1?" · con "+esc(nombreDe(l.quienes.find(e=>e!==S.email))):""}</div></div>
+    <div style="text-align:right"><div class="price">${l.status==="aprobada"||l.status==="resuelta"?money(valor(l,S.email)):""}</div><span class="chip ${l.status}">${ESTADO[l.status]}</span></div></div>
+    ${l.comentario && l.status!=="aprobada" ? `<div class="note">${esc(l.comentario)}</div>`:""}</div>`).join("") : `<div class="empty">No hay tareas en este mes.</div>`}`;
+}
+
+/* ----- papá ----- */
+function vPendientes(){
+  const pend = allLogs().filter(l => l.status === "pendiente").sort((a,b)=>a.creadoEn-b.creadoEn);
+  const rech = allLogs().filter(l => l.status === "rechazada");
+  const res = allLogs().filter(l => l.status === "resuelta" && l.dia.slice(0,7) === S.mes);
+  return `<h2>Para aprobar</h2>
+  ${pend.length ? pend.map(l => `<div class="card"><div class="head"><div><h3>${esc(l.nombre)}</h3>
+    <div class="muted small">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")} · ${l.dia.split("-").reverse().join("/")}${l.rechazos?` · ${l.rechazos} rechazo`:""}</div></div>
+    <span class="price">${money(l.precio)}</span></div>
+    <img class="photo" data-photo="${l.id}" alt="Foto de ${esc(l.nombre)}">
+    <div class="actions"><button class="btn bad" data-act="reject" data-id="${l.id}">Rechazar</button>
+    <button class="btn ok" data-act="approve" data-id="${l.id}">Aprobar</button></div></div>`).join("")
+    : `<div class="empty">No hay tareas esperando tu revisión.</div>`}
+  ${rech.length ? `<h2>Esperando corrección</h2>${rech.map(l=>`<div class="card"><div class="head"><h3>${esc(l.nombre)}</h3><span class="chip rechazada">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")}</span></div>
+    <div class="note">${esc(l.comentario)}</div></div>`).join("")}`:""}
+  ${res.length ? `<h2>Resueltas por vos (${mesLabel(S.mes)})</h2>${res.map(l=>`<div class="card"><div class="head"><div><h3>${esc(l.nombre)}</h3>
+    <div class="muted small">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")} · valía ${money(l.precio)}</div></div>
+    <span class="price">${money(l.pago||0)}</span></div>
+    <div class="actions"><button class="btn ghost sm" data-act="pago" data-id="${l.id}">Fijar monto a pagar</button></div></div>`).join("")}`:""}`;
+}
+
+function vResumen(){
+  const rows = hijas().map(h => ({ ...h, ...stats(h.id, S.mes) }));
+  return `${monthBar()}<h2>Ranking de ${mesLabel(S.mes)}</h2>${rankingHtml()}
+  <h2>Dinero del mes</h2>${rows.map(r=>`<div class="card"><div class="head"><h3>${esc(r.nombre)}</h3><span class="price">${money(r.dinero)}</span></div>
+    <div class="muted small">${r.tareas} tareas aprobadas · ${r.puntos} puntos</div></div>`).join("") || `<div class="empty">Sin hijas cargadas.</div>`}`;
+}
+
+function vTareas(){
+  const tasks = [...S.tasks].sort((a,b)=> (a.orden||0)-(b.orden||0));
+  return `<h2>Tareas y precios</h2>
+  ${tasks.length ? "" : `<div class="empty">No hay tareas. Cargá las iniciales desde Ajustes.</div>`}
+  ${tasks.map(t => `<div class="card" data-tid="${t.id}">
+    <label class="f" style="margin-top:0">Nombre</label><input type="text" data-f="nombre" value="${esc(t.nombre)}">
+    <div class="grid2"><div><label class="f">Categoría</label><input type="text" data-f="categoria" value="${esc(t.categoria)}"></div>
+    <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" data-f="precio" value="${t.precio}"></div></div>
+    <div class="grid2"><div><label class="f">Máx. por día</label><input type="number" inputmode="numeric" data-f="max" value="${t.max||1}"></div>
+    <div><label class="f">Grupo excluyente</label><input type="text" data-f="grupo" value="${esc(t.grupo||"")}" placeholder="ej: auto"></div></div>
+    <div class="chk"><input type="checkbox" id="a_${t.id}" data-f="activa" ${t.activa!==false?"checked":""}><label for="a_${t.id}">Activa</label></div></div>`).join("")}
+  <div class="card"><h3>Agregar tarea</h3>
+    <label class="f">Nombre</label><input type="text" id="nt_nombre">
+    <div class="grid2"><div><label class="f">Categoría</label><input type="text" id="nt_cat"></div>
+    <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" id="nt_precio"></div></div>
+    <div class="actions"><button class="btn" data-act="addtask">Agregar</button></div></div>`;
+}
+
+function vCierre(){
+  const open = allLogs().filter(l => ["pendiente","rechazada"].includes(l.status) && l.dia.slice(0,7) === S.mes).length;
+  return `${monthBar()}<h2>Cierre de ${mesLabel(S.mes)}</h2>
+  ${open ? `<div class="note">Hay ${open} tarea${open>1?"s":""} de este mes sin resolver. Si cerrás ahora, no suman.</div>`:""}
+  ${hijas().map(h => { const st = stats(h.id, S.mes); const cl = S.closings.find(c=>c.id===`${h.id}_${S.mes}`);
+    return `<div class="card"><div class="head"><div><h3>${esc(h.nombre)}</h3><div class="muted small">${st.tareas} tareas aprobadas</div></div>
+      <span class="price">${money(st.dinero)}</span></div>
+      ${cl ? `<span class="paid">Cobrado · ${esc(cl.metodo)} · ${money(cl.total)}</span>
+        <div class="actions"><button class="btn ghost sm" data-act="unclose" data-id="${cl.id}">Deshacer</button></div>`
+        : `<div class="actions"><button class="btn" data-act="close" data-email="${esc(h.id)}">Registrar cobro</button></div>`}</div>`; }).join("") || `<div class="empty">Sin hijas cargadas.</div>`}`;
+}
+
+function vAjustes(){
+  const c = S.cfg;
+  return `<h2>Constancia y puntos</h2><div class="card">
+    <label class="f" style="margin-top:0">Tareas aprobadas por semana para contar como constante (N)</label><input type="number" inputmode="numeric" id="c_N" value="${c.N}">
+    <div class="grid2"><div><label class="f">Puntos por tarea</label><input type="number" step="0.5" id="c_pTarea" value="${c.pTarea}"></div>
+    <div><label class="f">Extra primer intento</label><input type="number" step="0.5" id="c_pPrimera" value="${c.pPrimera}"></div></div>
+    <label class="f">Bonus por semana constante</label><input type="number" step="0.5" id="c_pSemana" value="${c.pSemana}">
+    <div class="actions"><button class="btn" data-act="savecfg">Guardar</button></div></div>
+  <h2>Quién puede entrar</h2>
+  ${hijas().map(h=>`<div class="card"><div class="head"><div><h3>${esc(h.nombre)}</h3><div class="muted small">${esc(h.id)}</div></div>
+    <button class="btn ghost sm" data-act="delallowed" data-id="${esc(h.id)}">Quitar</button></div></div>`).join("")}
+  <div class="card"><h3>Agregar hija</h3>
+    <label class="f">Nombre</label><input type="text" id="al_nombre">
+    <label class="f">Mail de Google</label><input type="email" id="al_email" autocapitalize="off">
+    <div class="actions"><button class="btn" data-act="addallowed">Agregar</button></div></div>
+  <h2>Datos iniciales</h2><div class="card"><p class="muted small" style="margin-top:0">Carga la lista de tareas depurada (sin las de Luca Enzo). Reemplaza tareas con el mismo identificador.</p>
+    <div class="actions"><button class="btn ghost" data-act="seed">Cargar tareas iniciales</button></div></div>`;
+}
+
+/* ---------- fotos ---------- */
+async function fillPhotos(){
+  for (const img of document.querySelectorAll("img[data-photo]")) {
+    const id = img.dataset.photo;
+    try {
+      if (!S.photos.has(id)) { const s = await getDoc(doc(db,"photos",id)); S.photos.set(id, s.exists()? s.data().data : ""); }
+      img.src = S.photos.get(id);
+    } catch(e){ fail(e); }
+  }
+}
+async function compress(file){
+  const bmp = await createImageBitmap(file);
+  let max = 960, q = 0.7, out = "";
+  for (let i = 0; i < 8; i++) {
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width*k); c.height = Math.round(bmp.height*k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    out = c.toDataURL("image/jpeg", q);
+    if (out.length < 140000) break;
+    q = Math.max(0.35, q - 0.1); max = Math.max(500, max - 120);
+  }
+  return out;
+}
+
+/* ---------- diálogos ---------- */
+const dlg = $("#dlg");
+function openDlg(html){ dlg.innerHTML = html; if (!dlg.open) dlg.showModal(); }
+function closeDlg(){ if (dlg.open) dlg.close(); S.draft = null; }
+dlg.addEventListener("click", e => { if (e.target === dlg) closeDlg(); });
+dlg.addEventListener("close", () => { if (S.dirty) render(); });
+
+function openTake(taskId, fixId){
+  const log = fixId ? allLogs().find(l=>l.id===fixId) : null;
+  const t = log ? { id:log.taskId, nombre:log.nombre, precio:log.precio } : S.tasks.find(x=>x.id===taskId);
+  S.draft = { taskId:t.id, fixId, photo:null, shared:false };
+  const otras = hijas().filter(h => h.id !== S.email);
+  openDlg(`<h2 style="margin-top:0">${esc(t.nombre)}</h2><p class="price" style="margin:0 0 8px">${money(t.precio)}</p>
+    ${log ? `<div class="note">${esc(log.comentario)}</div>`:""}
+    ${!log && otras.length ? `<div class="chk"><input type="checkbox" id="sh"><label for="sh">La hicimos entre dos (se divide)</label></div>
+      <div id="shwrap" hidden><label class="f" for="shwho">¿Con quién?</label><select id="shwho">${otras.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join("")}</select></div>`:""}
+    <label class="f" for="ph">Foto de la tarea terminada</label>
+    <input type="file" id="ph" accept="image/*" capture="environment">
+    <img class="photo" id="prev" alt="Vista previa" hidden>
+    <div class="actions"><button class="btn ghost" data-act="cancel">Cancelar</button>
+    <button class="btn ok" id="send" data-act="send" disabled>Enviar a papá</button></div>`);
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener("change", async e => {
+  const t = e.target;
+  if (t.id === "ph") {
+    const f = t.files[0]; if (!f) return;
+    $("#send").disabled = true;
+    try { S.draft.photo = await compress(f); const p = $("#prev"); p.src = S.draft.photo; p.hidden = false; $("#send").disabled = false; }
+    catch(err){ fail(err); }
+  } else if (t.id === "sh") { $("#shwrap").hidden = !t.checked; S.draft.shared = t.checked; }
+  else if (t.dataset.act === "mes") { if (t.value) { S.mes = t.value; subLogs(); render(); } }
+  else if (t.dataset.f && t.closest("[data-tid]")) {
+    const id = t.closest("[data-tid]").dataset.tid, f = t.dataset.f;
+    let v = t.type === "checkbox" ? t.checked : t.value;
+    if (f === "precio" || f === "max") v = Math.max(0, Number(v) || 0);
+    if (f === "max" && v < 1) v = 1;
+    try { await updateDoc(doc(db,"tasks",id), { [f]: v }); toast("Guardado"); } catch(err){ fail(err); }
+  }
+});
+document.addEventListener("focusout", () => setTimeout(() => { if (S.dirty && !document.activeElement?.closest?.("#app input, #app select")) render(); }, 150));
+
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b || b.tagName === "INPUT") return;
+  const act = b.dataset.act, id = b.dataset.id;
+  try {
+    if (act === "demoreset") { if (confirm("¿Borrar todos los datos de prueba?")) { localStorage.removeItem("demoDB"); localStorage.removeItem("demoUser"); location.reload(); } return; }
+    if (act === "login") return login(b.dataset.who);
+    if (act === "logout") return signOut(auth);
+    if (act === "tab") { S.tab = b.dataset.tab; return render(); }
+    if (act === "take") return openTake(id);
+    if (act === "fix") return openTake(null, id);
+    if (act === "cancel") return closeDlg();
+    if (act === "send") {
+      const d = S.draft; if (!d?.photo) return;
+      b.disabled = true;
+      const batch = writeBatch(db);
+      if (d.fixId) {
+        batch.set(doc(db,"photos",d.fixId), { quienes: allLogs().find(l=>l.id===d.fixId).quienes, data:d.photo });
+        batch.update(doc(db,"logs",d.fixId), { status:"pendiente" });
+      } else {
+        const t = S.tasks.find(x=>x.id===d.taskId);
+        const quienes = [S.email];
+        if (d.shared) quienes.push($("#shwho").value);
+        const ref = doc(collection(db,"logs"));
+        batch.set(doc(db,"photos",ref.id), { quienes, data:d.photo });
+        batch.set(ref, { taskId:t.id, nombre:t.nombre, categoria:t.categoria, precio:t.precio, grupo:t.grupo||"",
+          quienes, dia:today(), creadoEn:Date.now(), status:"pendiente", rechazos:0, comentario:"", pago:0 });
+      }
+      await batch.commit(); closeDlg(); toast("Enviado. Papá lo revisa pronto.");
+    }
+    /* papá */
+    if (act === "approve") {
+      const batch = writeBatch(db);
+      batch.update(doc(db,"logs",id), { status:"aprobada", aprobadoEn:Date.now() });
+      batch.delete(doc(db,"photos",id));
+      await batch.commit(); S.photos.delete(id); toast("Aprobada");
+    }
+    if (act === "reject") {
+      const l = allLogs().find(x=>x.id===id);
+      const last = l.rechazos + 1 >= 2;
+      S.draft = { id };
+      openDlg(`<h2 style="margin-top:0">Rechazar: ${esc(l.nombre)}</h2>
+        ${last ? `<div class="note">Es el segundo rechazo. Pasa a "resuelta por papá" y no paga hasta que fijes un monto.</div>`:""}
+        <label class="f" for="cm">¿Qué falta o qué está mal?</label><textarea id="cm"></textarea>
+        <div class="actions"><button class="btn ghost" data-act="cancel">Cancelar</button><button class="btn bad" data-act="rejectgo">Rechazar</button></div>`);
+    }
+    if (act === "rejectgo") {
+      const cm = $("#cm").value.trim(); if (!cm) return toast("Escribí qué falta corregir.");
+      const l = allLogs().find(x=>x.id===S.draft.id);
+      const n = l.rechazos + 1, last = n >= 2;
+      const batch = writeBatch(db);
+      batch.update(doc(db,"logs",l.id), { status: last ? "resuelta" : "rechazada", rechazos:n, comentario:cm, pago:0 });
+      if (last) batch.delete(doc(db,"photos",l.id));
+      await batch.commit(); closeDlg(); toast(last ? "Quedó resuelta por vos" : "Devuelta para corregir");
+    }
+    if (act === "pago") {
+      const l = allLogs().find(x=>x.id===id); S.draft = { id };
+      openDlg(`<h2 style="margin-top:0">${esc(l.nombre)}</h2><p class="muted small">Valía ${money(l.precio)}. Si es compartida, se divide entre las dos.</p>
+        <label class="f" for="pg">Monto total a pagar ($)</label><input type="number" inputmode="numeric" id="pg" value="${l.pago||0}">
+        <div class="actions"><button class="btn ghost" data-act="cancel">Cancelar</button><button class="btn" data-act="pagogo">Guardar</button></div>`);
+    }
+    if (act === "pagogo") { await updateDoc(doc(db,"logs",S.draft.id), { pago: Math.max(0, Number($("#pg").value)||0) }); closeDlg(); toast("Guardado"); }
+    if (act === "addtask") {
+      const nombre = $("#nt_nombre").value.trim(), categoria = $("#nt_cat").value.trim() || "Otras", precio = Number($("#nt_precio").value);
+      if (!nombre || !(precio >= 0)) return toast("Falta nombre o precio.");
+      const ref = doc(collection(db,"tasks"));
+      await setDoc(ref, { nombre, categoria, precio, max:1, grupo:"", activa:true, orden:Date.now() }); toast("Agregada");
+    }
+    if (act === "close") {
+      const email = b.dataset.email, st = stats(email, S.mes); S.draft = { email, total:st.dinero, tareas:st.tareas };
+      openDlg(`<h2 style="margin-top:0">Cobro de ${esc(nombreDe(email))}</h2><p>${money(st.dinero)} · ${mesLabel(S.mes)}</p>
+        <label class="f" for="mt">¿Cómo se pagó?</label><select id="mt"><option>Efectivo</option><option>Cocos Capital</option></select>
+        <div class="actions"><button class="btn ghost" data-act="cancel">Cancelar</button><button class="btn ok" data-act="closego">Registrar</button></div>`);
+    }
+    if (act === "closego") {
+      const d = S.draft;
+      await setDoc(doc(db,"closings",`${d.email}_${S.mes}`), { email:d.email, mes:S.mes, total:Math.round(d.total), tareas:d.tareas, metodo:$("#mt").value, pagadoEn:Date.now() });
+      closeDlg(); toast("Cobro registrado");
+    }
+    if (act === "unclose") { await deleteDoc(doc(db,"closings",id)); toast("Cobro deshecho"); }
+    if (act === "savecfg") {
+      const g = k => Number($("#c_"+k).value);
+      await setDoc(doc(db,"config","main"), { N:Math.max(1,g("N")||5), pTarea:g("pTarea")||0, pPrimera:g("pPrimera")||0, pSemana:g("pSemana")||0 });
+      toast("Guardado");
+    }
+    if (act === "addallowed") {
+      const nombre = $("#al_nombre").value.trim(), mail = $("#al_email").value.trim().toLowerCase();
+      if (!nombre || !mail.includes("@")) return toast("Falta nombre o mail válido.");
+      await setDoc(doc(db,"allowed",mail), { nombre, rol:"hija" }); toast("Agregada");
+    }
+    if (act === "delallowed") { if (confirm("¿Quitar el acceso?")) await deleteDoc(doc(db,"allowed",id)); }
+    if (act === "seed") await seed();
+  } catch(err){ fail(err); }
+});
+
+async function seed(){
+  const T = [
+    ["Cocina","Poner la mesa",1000,2],["Cocina","Levantar y limpiar la mesa",1500,2],
+    ["Cocina","Lavar los platos y cubiertos",2500,2],["Cocina","Lavar ollas y fuentes",1000,2],
+    ["Cocina","Preparar una ensalada",1500,1],["Cocina","Preparar una comida sencilla para la familia",3500,1],
+    ["Su cuarto","Hacer la cama",1500,1],["Su cuarto","Ordenar la pieza (sin cama ni aspirado)",2500,1],["Su cuarto","Aspirar su pieza",1500,1],
+    ["Limpieza general","Aspirar la casa (sin tu pieza)",2000,1],["Limpieza general","Barrer la cochera",2000,1],
+    ["Limpieza general","Lavar el auto (solo exterior)",3500,1,"auto"],["Limpieza general","Lavar el auto (completo)",7000,1,"auto"],
+    ["Jardín","Regar el patio",2500,1],["Jardín","Juntar caca de Roma",1500,1],
+    ["Lavandería","Colgar ropa lavada",1500,1],
+    ["Tareas especiales","Tarea pedida por papá o Lara (acordar antes)",2500,1]
+  ];
+  const batch = writeBatch(db);
+  T.forEach((t,i) => batch.set(doc(db,"tasks","t"+String(i+1).padStart(2,"0")),
+    { categoria:t[0], nombre:t[1], precio:t[2], max:t[3], grupo:t[4]||"", activa:true, orden:i+1 }));
+  await batch.commit(); toast("Tareas cargadas");
+}
+
+render();
+</script>
+</body>
+</html>

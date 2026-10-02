@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mi caja</title>
+<title>AAP - Tareas del Hogar</title>
 <meta name="theme-color" content="#12203A">
 <meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Mi caja">
+<meta name="apple-mobile-web-app-title" content="AAP Tareas">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
@@ -85,6 +85,8 @@ button.btn.sm{padding:8px 12px;min-height:38px;font-size:.9rem}
   background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 8px;cursor:pointer}
 .task:disabled{opacity:.5;cursor:not-allowed}
 .task .t{font-weight:600}
+.task .tl{display:flex;align-items:center;gap:12px}
+.ic{font-size:1.7rem;line-height:1;flex:none}
 
 /* tabs */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);
@@ -110,7 +112,7 @@ dialog::backdrop{background:rgba(18,32,58,.55)}
 .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
   background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;display:none}
 .center{min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;padding:24px}
-.center h1{font-size:2.4rem;font-weight:800}
+.center h1{font-size:2rem;font-weight:800;line-height:1.1}
 .empty{color:var(--muted);text-align:center;padding:26px 10px}
 @media (prefers-reduced-motion:no-preference){ .toast{transition:opacity .2s} }
 @media (min-width:700px){ .wrap{padding-top:24px} }
@@ -166,7 +168,7 @@ function fail(e){ console.error(e); toast(e.code==="permission-denied" ? "Sin pe
     x.fillStyle="#12203A"; x.font="800 190px system-ui,sans-serif"; x.textAlign="center"; x.textBaseline="middle"; x.fillText("$",256,270);
     const icon=c.toDataURL("image/png");
     const l=document.createElement("link"); l.rel="apple-touch-icon"; l.href=icon; document.head.appendChild(l);
-    const man={name:"Mi caja",short_name:"Mi caja",display:"standalone",background_color:"#EDF1F3",theme_color:"#12203A",
+    const man={name:"AAP - Tareas del Hogar",short_name:"AAP Tareas",display:"standalone",background_color:"#EDF1F3",theme_color:"#12203A",
       start_url:location.href.split("#")[0],icons:[{src:icon,sizes:"512x512",type:"image/png"}]};
     const m=document.createElement("link"); m.rel="manifest";
     m.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:"application/manifest+json"})); document.head.appendChild(m);
@@ -274,11 +276,14 @@ function usedToday(taskId){
 }
 
 /* ---------- vistas ---------- */
+const ICONOS = {t01:"🍴",t02:"🧽",t03:"🧼",t04:"🍳",t05:"🥗",t06:"🍝",t07:"🛏️",t08:"🧸",t09:"🧹",t10:"🏠",t11:"🧹",t12:"🚗",t13:"🚘",t14:"🌱",t15:"🐕",t16:"👕",t17:"⭐"};
+const ico = id => { const t = S.tasks.find(x => x.id === id); return (t && t.icono) || ICONOS[id] || "✅"; };
+
 function render(){
   if (document.activeElement?.closest?.("#app input, #app select") && S.tab==="tareas" && !$("#dlg").open) { S.dirty = true; return; }
   S.dirty = false;
   if (!S.email) {
-    app.innerHTML = `<div class="center"><h1>Mi caja</h1><p class="muted">Cada tarea hecha suma a tu caja del mes.</p>
+    app.innerHTML = `<div class="center"><h1>AAP - Tareas del Hogar</h1><p class="muted">Cada tarea hecha suma a tu caja del mes.</p>
       <button class="btn" data-act="login">Entrar con Google</button></div>`;
     return;
   }
@@ -331,11 +336,11 @@ function vInicio(){
   ${S.mes === today().slice(0,7) ? `<div class="card"><h3>Esta semana: ${wkCount} de ${S.cfg.N} tareas</h3>
     <div class="bar" aria-hidden="true"><i style="width:${Math.min(100,wkCount/S.cfg.N*100)}%"></i></div>
     <p class="muted small" style="margin:6px 0 0">${wkCount>=S.cfg.N?"Semana constante lograda.":"Llegá a "+S.cfg.N+" para sumar el bonus de constancia."}</p></div>`:""}
-  ${fix.length ? `<h2>Para corregir</h2>${fix.map(l=>`<div class="card"><div class="head"><h3>${esc(l.nombre)}</h3><span class="chip rechazada">${ESTADO.rechazada}</span></div>
+  ${fix.length ? `<h2>Para corregir</h2>${fix.map(l=>`<div class="card"><div class="head"><h3>${ico(l.taskId)} ${esc(l.nombre)}</h3><span class="chip rechazada">${ESTADO.rechazada}</span></div>
     <div class="note">${esc(l.comentario)}</div>
     <p class="muted small" style="margin:0">Te queda ${2-l.rechazos} intento${2-l.rechazos===1?"":"s"} antes de que lo resuelva papá.</p>
     <div class="actions"><button class="btn" data-act="fix" data-id="${l.id}">Corregir y mandar nueva foto</button></div></div>`).join("")}`:""}
-  ${wait.length ? `<h2>En revisión</h2>${wait.map(l=>`<div class="card"><div class="head"><h3>${esc(l.nombre)}</h3><span class="chip pendiente">${ESTADO.pendiente}</span></div></div>`).join("")}`:""}
+  ${wait.length ? `<h2>En revisión</h2>${wait.map(l=>`<div class="card"><div class="head"><h3>${ico(l.taskId)} ${esc(l.nombre)}</h3><span class="chip pendiente">${ESTADO.pendiente}</span></div></div>`).join("")}`:""}
   <h2>Ranking de ${mesLabel(S.mes)}</h2>${rankingHtml()}`;
 }
 
@@ -347,7 +352,7 @@ function vTomar(){
     const max = t.max || 1;
     const blocked = usedToday(t.id) >= max;
     return `<button class="task" data-act="take" data-id="${t.id}" ${blocked?"disabled":""}>
-      <span><span class="t">${esc(t.nombre)}</span>${blocked?`<span class="muted small"><br>Máximo de hoy alcanzado</span>`:(max>1?`<span class="muted small"><br>Hasta ${max} veces por día</span>`:"")}</span>
+      <span class="tl"><span class="ic">${ico(t.id)}</span><span><span class="t">${esc(t.nombre)}</span>${blocked?`<span class="muted small"><br>Máximo de hoy alcanzado</span>`:(max>1?`<span class="muted small"><br>Hasta ${max} veces por día</span>`:"")}</span></span>
       <span class="price">${money(t.precio)}</span></button>`; }).join("")).join("");
 }
 
@@ -357,7 +362,7 @@ function vHistorial(){
   return `${monthBar()}
   <div class="card"><div class="head"><h3>Total del mes</h3><span class="price">${money(st.dinero)}</span></div>
   <p class="muted small" style="margin:4px 0 0">${st.tareas} tareas aprobadas</p></div>
-  ${mine.length ? mine.map(l => `<div class="card"><div class="head"><div><h3>${esc(l.nombre)}</h3>
+  ${mine.length ? mine.map(l => `<div class="card"><div class="head"><div><h3>${ico(l.taskId)} ${esc(l.nombre)}</h3>
     <div class="muted small">${l.dia.split("-").reverse().join("/")}${l.quienes.length>1?" · con "+esc(nombreDe(l.quienes.find(e=>e!==S.email))):""}</div></div>
     <div style="text-align:right"><div class="price">${l.status==="aprobada"||l.status==="resuelta"?money(valor(l,S.email)):""}</div><span class="chip ${l.status}">${ESTADO[l.status]}</span></div></div>
     ${l.comentario && l.status!=="aprobada" ? `<div class="note">${esc(l.comentario)}</div>`:""}</div>`).join("") : `<div class="empty">No hay tareas en este mes.</div>`}`;
@@ -369,16 +374,16 @@ function vPendientes(){
   const rech = allLogs().filter(l => l.status === "rechazada");
   const res = allLogs().filter(l => l.status === "resuelta" && l.dia.slice(0,7) === S.mes);
   return `<h2>Para aprobar</h2>
-  ${pend.length ? pend.map(l => `<div class="card"><div class="head"><div><h3>${esc(l.nombre)}</h3>
+  ${pend.length ? pend.map(l => `<div class="card"><div class="head"><div><h3>${ico(l.taskId)} ${esc(l.nombre)}</h3>
     <div class="muted small">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")} · ${l.dia.split("-").reverse().join("/")}${l.rechazos?` · ${l.rechazos} rechazo`:""}</div></div>
     <span class="price">${money(l.precio)}</span></div>
     <img class="photo" data-photo="${l.id}" alt="Foto de ${esc(l.nombre)}">
     <div class="actions"><button class="btn bad" data-act="reject" data-id="${l.id}">Rechazar</button>
     <button class="btn ok" data-act="approve" data-id="${l.id}">Aprobar</button></div></div>`).join("")
     : `<div class="empty">No hay tareas esperando tu revisión.</div>`}
-  ${rech.length ? `<h2>Esperando corrección</h2>${rech.map(l=>`<div class="card"><div class="head"><h3>${esc(l.nombre)}</h3><span class="chip rechazada">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")}</span></div>
+  ${rech.length ? `<h2>Esperando corrección</h2>${rech.map(l=>`<div class="card"><div class="head"><h3>${ico(l.taskId)} ${esc(l.nombre)}</h3><span class="chip rechazada">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")}</span></div>
     <div class="note">${esc(l.comentario)}</div></div>`).join("")}`:""}
-  ${res.length ? `<h2>Resueltas por vos (${mesLabel(S.mes)})</h2>${res.map(l=>`<div class="card"><div class="head"><div><h3>${esc(l.nombre)}</h3>
+  ${res.length ? `<h2>Resueltas por vos (${mesLabel(S.mes)})</h2>${res.map(l=>`<div class="card"><div class="head"><div><h3>${ico(l.taskId)} ${esc(l.nombre)}</h3>
     <div class="muted small">${l.quienes.map(e=>esc(nombreDe(e))).join(" + ")} · valía ${money(l.precio)}</div></div>
     <span class="price">${money(l.pago||0)}</span></div>
     <div class="actions"><button class="btn ghost sm" data-act="pago" data-id="${l.id}">Fijar monto a pagar</button></div></div>`).join("")}`:""}`;
@@ -403,7 +408,8 @@ function vTareas(){
   return `<h2>Tareas y precios</h2>
   ${tasks.length ? "" : `<div class="empty">No hay tareas. Cargá las iniciales desde Ajustes.</div>`}
   ${tasks.map(t => `<div class="card" data-tid="${t.id}">
-    <label class="f" style="margin-top:0">Nombre</label><input type="text" data-f="nombre" value="${esc(t.nombre)}">
+    <div class="trow"><div><label class="f" style="margin-top:0">Nombre</label><input type="text" data-f="nombre" value="${esc(t.nombre)}"></div>
+    <div><label class="f" style="margin-top:0">Ícono</label><input type="text" data-f="icono" value="${esc(ico(t.id))}" maxlength="8" style="text-align:center;font-size:1.3rem"></div></div>
     <div class="grid2"><div><label class="f">Categoría</label><select data-f="categoria">${catOptions(t.categoria)}</select></div>
     <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" data-f="precio" value="${t.precio}"></div></div>
     <label class="f">Máx. por día</label><input type="number" inputmode="numeric" data-f="max" value="${t.max||1}">
@@ -483,7 +489,7 @@ function openTake(taskId, fixId){
   const t = log ? { id:log.taskId, nombre:log.nombre, precio:log.precio } : S.tasks.find(x=>x.id===taskId);
   S.draft = { taskId:t.id, fixId, photo:null, shared:false };
   const otras = hijas().filter(h => h.id !== S.email);
-  openDlg(`<h2 style="margin-top:0">${esc(t.nombre)}</h2><p class="price" style="margin:0 0 8px">${money(t.precio)}</p>
+  openDlg(`<h2 style="margin-top:0">${ico(t.id)} ${esc(t.nombre)}</h2><p class="price" style="margin:0 0 8px">${money(t.precio)}</p>
     ${log ? `<div class="note">${esc(log.comentario)}</div>`:""}
     ${!log && otras.length ? `<div class="chk"><input type="checkbox" id="sh"><label for="sh">La hicimos entre dos (se divide)</label></div>
       <div id="shwrap" hidden><label class="f" for="shwho">¿Con quién?</label><select id="shwho">${otras.map(o=>`<option value="${esc(o.id)}">${esc(o.nombre)}</option>`).join("")}</select></div>`:""}
@@ -516,6 +522,8 @@ document.addEventListener("change", async e => {
     const id = t.closest("[data-tid]").dataset.tid, f = t.dataset.f;
     let v = t.type === "checkbox" ? t.checked : t.value;
     if (f === "precio" || f === "max") v = Math.max(0, Number(v) || 0);
+    if (f === "icono") { const s = String(v).trim();
+      v = ((window.Intl && Intl.Segmenter) ? [...new Intl.Segmenter().segment(s)].map(x => x.segment) : [...s]).slice(0,2).join("") || "✅"; }
     if (f === "max" && v < 1) v = 1;
     try { await updateDoc(doc(db,"tasks",id), { [f]: v }); toast("Guardado"); } catch(err){ fail(err); }
   }

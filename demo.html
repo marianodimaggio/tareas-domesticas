@@ -85,6 +85,9 @@ button.btn.sm{padding:8px 12px;min-height:38px;font-size:.9rem}
   background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:0 0 8px;cursor:pointer}
 .task:disabled{opacity:.5;cursor:not-allowed}
 .task .t{font-weight:600}
+.off{opacity:.65}
+.card.off{border-style:dashed}
+.monthbar select{width:auto;min-width:210px}
 .task .tl{display:flex;align-items:center;gap:12px}
 .ic{font-size:1.7rem;line-height:1;flex:none}
 
@@ -330,6 +333,7 @@ function usedToday(taskId){
 
 /* ---------- vistas ---------- */
 const ICONOS = {t01:"🍴",t02:"🧽",t03:"🧼",t04:"🍳",t05:"🥗",t06:"🍝",t07:"🛏️",t08:"🧸",t09:"🧹",t10:"🏠",t11:"🧹",t12:"🚗",t13:"🚘",t14:"🌱",t15:"🐕",t16:"👕",t17:"⭐"};
+const cut2 = s => { s = String(s || "").trim(); const a = (window.Intl && Intl.Segmenter) ? [...new Intl.Segmenter().segment(s)].map(x => x.segment) : [...s]; return a.slice(0,2).join(""); };
 const ico = id => { const t = S.tasks.find(x => x.id === id); return (t && t.icono) || ICONOS[id] || "✅"; };
 
 function render(){
@@ -357,7 +361,7 @@ function render(){
   const view = ({ inicio:vInicio, tomar:vTomar, historial:vHistorial, pendientes:vPendientes,
                   resumen:vResumen, tareas:vTareas, cierre:vCierre, ajustes:vAjustes })[S.tab]();
   app.innerHTML = `<div class="wrap">
-    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"}</small></div>
+    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"} · v3</small></div>
     <button class="linkbtn" data-act="logout">Salir</button></header>
     ${view}</div>
     <nav class="tabs" aria-label="Secciones">${tabs.map(([k,n]) =>
@@ -461,10 +465,20 @@ function catOptions(sel){
 }
 
 function vTareas(){
-  const tasks = [...S.tasks].sort((a,b)=> (a.orden||0)-(b.orden||0));
-  return `<h2>Tareas y precios</h2>
-  ${tasks.length ? "" : `<div class="empty">No hay tareas. Cargá las iniciales desde Ajustes.</div>`}
-  ${tasks.map(t => `<div class="card" data-tid="${t.id}">
+  const all = [...S.tasks].sort((a,b)=> (a.orden||0)-(b.orden||0));
+  const modo = S.vt || "todas";
+  const act = all.filter(t => t.activa !== false).length, des = all.length - act;
+  const filtro = `<div class="monthbar"><label for="vt" class="muted small">Ver</label><select id="vt" data-act="vt">
+    ${[["todas","Todas ("+all.length+")"],["activas","Activas ("+act+")"],["desactivadas","Desactivadas ("+des+")"],["lista","Lista resumida"]]
+      .map(([v,n]) => `<option value="${v}" ${modo===v?"selected":""}>${n}</option>`).join("")}</select></div>`;
+  if (modo === "lista") return `<h2>Tareas y precios</h2>${filtro}<div class="card">${all.map(t => `<div class="rank${t.activa===false?" off":""}"><div class="pos">${ico(t.id)}</div>
+    <div class="nm">${esc(t.nombre)}<div class="muted small">${esc(t.categoria)} · hasta ${t.max||1} por día${t.activa===false?" · DESACTIVADA":""}</div></div>
+    <div class="pt">${money(t.precio)}</div></div>`).join("") || `<div class="empty">No hay tareas.</div>`}</div>`;
+  const tasks = all.filter(t => modo === "todas" || (modo === "activas") === (t.activa !== false));
+  return `<h2>Tareas y precios</h2>${filtro}
+  ${tasks.length ? "" : `<div class="empty">${all.length ? "No hay tareas en esta vista." : "No hay tareas. Cargá las iniciales desde Ajustes."}</div>`}
+  ${tasks.map(t => `<div class="card${t.activa===false?" off":""}" data-tid="${t.id}">
+    ${t.activa===false ? `<span class="chip resuelta">Desactivada</span>` : ""}
     <div class="trow"><div><label class="f" style="margin-top:0">Nombre</label><input type="text" data-f="nombre" value="${esc(t.nombre)}"></div>
     <div><label class="f" style="margin-top:0">Ícono</label><input type="text" data-f="icono" value="${esc(ico(t.id))}" maxlength="8" style="text-align:center;font-size:1.3rem"></div></div>
     <div class="grid2"><div><label class="f">Categoría</label><select data-f="categoria">${catOptions(t.categoria)}</select></div>
@@ -473,7 +487,8 @@ function vTareas(){
     <div class="chk"><input type="checkbox" id="a_${t.id}" data-f="activa" ${t.activa!==false?"checked":""}><label for="a_${t.id}">Activa</label></div>
     <div class="actions"><button class="btn ghost sm" data-act="deltask" data-id="${t.id}">Eliminar tarea</button></div></div>`).join("")}
   <div class="card"><h3>Agregar tarea</h3>
-    <label class="f">Nombre</label><input type="text" id="nt_nombre">
+    <div class="trow"><div><label class="f" style="margin-top:0">Nombre</label><input type="text" id="nt_nombre"></div>
+    <div><label class="f" style="margin-top:0">Ícono</label><input type="text" id="nt_icono" placeholder="✅" maxlength="8" style="text-align:center;font-size:1.3rem"></div></div>
     <div class="grid2"><div><label class="f">Categoría</label><select id="nt_cat">${catOptions("")}</select></div>
     <div><label class="f">Precio ($)</label><input type="number" inputmode="numeric" id="nt_precio"></div></div>
     <div class="actions"><button class="btn" data-act="addtask">Agregar</button></div></div>`;
@@ -566,6 +581,7 @@ document.addEventListener("change", async e => {
     try { S.draft.photo = await compress(f); const p = $("#prev"); p.src = S.draft.photo; p.hidden = false; $("#send").disabled = false; }
     catch(err){ fail(err); }
   } else if (t.id === "sh") { $("#shwrap").hidden = !t.checked; S.draft.shared = t.checked; }
+  else if (t.dataset.act === "vt") { S.vt = t.value; t.blur(); S.dirty = false; render(); }
   else if (t.dataset.act === "mes") { if (t.value) { S.mes = t.value; subLogs(); render(); } }
   else if ((t.dataset.f === "categoria" || t.id === "nt_cat") && t.value === "__nueva__") {
     const n = (prompt("Nombre de la nueva categoría") || "").trim();
@@ -659,7 +675,7 @@ document.addEventListener("click", async e => {
       if (!nombre || !(precio >= 0)) return toast("Falta nombre o precio.");
       if (categoria === "__nueva__") return toast("Elegí o creá una categoría.");
       const ref = doc(collection(db,"tasks"));
-      await setDoc(ref, { nombre, categoria, precio, max:1, activa:true, orden:Date.now() }); toast("Agregada");
+      await setDoc(ref, { nombre, icono: cut2($("#nt_icono").value) || "✅", categoria, precio, max:1, activa:true, orden:Date.now() }); toast("Agregada");
     }
     if (act === "close") {
       const email = b.dataset.email, st = stats(email, S.mes); S.draft = { email, total:st.dinero, tareas:st.tareas };

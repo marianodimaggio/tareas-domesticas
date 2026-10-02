@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mi caja PRUEBA</title>
+<title>AAP - Tareas del Hogar PRUEBA</title>
 <meta name="theme-color" content="#12203A">
 <meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Mi caja PRUEBA">
+<meta name="apple-mobile-web-app-title" content="AAP PRUEBA">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
@@ -110,7 +110,7 @@ dialog::backdrop{background:rgba(18,32,58,.55)}
 .toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
   background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;z-index:20;max-width:90vw;display:none}
 .center{min-height:80vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px;padding:24px}
-.center h1{font-size:2.4rem;font-weight:800}
+.center h1{font-size:2rem;font-weight:800;line-height:1.1}
 .empty{color:var(--muted);text-align:center;padding:26px 10px}
 @media (prefers-reduced-motion:no-preference){ .toast{transition:opacity .2s} }
 @media (min-width:700px){ .wrap{padding-top:24px} }
@@ -163,7 +163,7 @@ const _notify=()=>{ _save(); setTimeout(()=>_listeners.forEach(f=>f()),0); };
 let _autoN=0;
 const initializeApp=()=>({}); const getAuth=()=>({}); const getFirestore=()=>({});
 class GoogleAuthProvider{ setCustomParameters(){} }
-const collection=(db,name)=>({t:"col",name});
+const collection=(db,name)=>({t:"col",name,col:name});
 const doc=(a,b,c)=>{ if(a.t==="col") return {t:"doc",col:a.name,id:"d"+Date.now().toString(36)+(_autoN++)}; return {t:"doc",col:b,id:c}; };
 const where=(field,op,val)=>({field,op,val});
 const query=(c,...cons)=>({t:"q",col:c.name,cons});
@@ -219,7 +219,7 @@ function fail(e){ console.error(e); toast(e.code==="permission-denied" ? "Sin pe
     x.fillStyle="#C8452D"; x.font="800 190px system-ui,sans-serif"; x.textAlign="center"; x.textBaseline="middle"; x.fillText("$",256,270);
     const icon=c.toDataURL("image/png");
     const l=document.createElement("link"); l.rel="apple-touch-icon"; l.href=icon; document.head.appendChild(l);
-    const man={name:"Mi caja PRUEBA",short_name:"PRUEBA",display:"standalone",background_color:"#EDF1F3",theme_color:"#12203A",
+    const man={name:"AAP - Tareas del Hogar PRUEBA",short_name:"AAP PRUEBA",display:"standalone",background_color:"#EDF1F3",theme_color:"#12203A",
       start_url:location.href.split("#")[0],icons:[{src:icon,sizes:"512x512",type:"image/png"}]};
     const m=document.createElement("link"); m.rel="manifest";
     m.href=URL.createObjectURL(new Blob([JSON.stringify(man)],{type:"application/manifest+json"})); document.head.appendChild(m);
@@ -331,7 +331,7 @@ function render(){
   if (document.activeElement?.closest?.("#app input, #app select") && S.tab==="tareas" && !$("#dlg").open) { S.dirty = true; return; }
   S.dirty = false;
   if (!S.email) {
-    app.innerHTML = `<div class="center"><h1>Mi caja</h1><p class="muted">Cada tarea hecha suma a tu caja del mes.</p>
+    app.innerHTML = `<div class="center"><h1>AAP - Tareas del Hogar</h1><p class="muted">Cada tarea hecha suma a tu caja del mes.</p>
       <p class="small"><b>Elegí con quién probar</b></p>
       <button class="btn" data-act="login" data-who="papa@demo.test">Entrar como Papá</button>
       <button class="btn ghost" data-act="login" data-who="emilia@demo.test">Entrar como Emilia</button>

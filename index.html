@@ -162,7 +162,7 @@ const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto"
 const mesLabel = m => { const [y,mm] = m.split("-"); return `${MESES[+mm-1]} ${y}`; };
 const ESTADO = { pendiente:"En revisión", rechazada:"Para corregir", aprobada:"Aprobada", resuelta:"Resuelta por papá" };
 let toastTimer;
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display="none",3500); }
+function toast(msg, ms = 3500){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display="none",ms); }
 function fail(e){ console.error(e); toast(e.code==="permission-denied" ? "Sin permiso: revisá las reglas de Firestore." : (e.message||"Algo falló")); }
 
 /* ---------- PWA: ícono y manifest generados en el navegador ---------- */
@@ -207,12 +207,12 @@ provider.setCustomParameters({ prompt:"select_account" });
 async function login(){
   try { await signInWithPopup(auth, provider); }
   catch(e){
-    if (["auth/popup-blocked","auth/operation-not-supported-in-this-environment","auth/cancelled-popup-request"].includes(e.code))
-      { try { await signInWithRedirect(auth, provider); } catch(e2){ fail(e2); } }
-    else if (e.code !== "auth/popup-closed-by-user") fail(e);
+    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return;
+    console.error(e);
+    toast("No se pudo entrar (" + (e.code || "error") + "). Abrí la app en Safari y permití ventanas emergentes.", 9000);
   }
 }
-getRedirectResult(auth).catch(fail);
+getRedirectResult(auth).catch(e => { if (!String(e.code).includes("missing-initial-state")) fail(e); });
 
 let subs = [];
 function clearSubs(){ subs.forEach(u => u()); subs = []; }
@@ -307,7 +307,7 @@ function render(){
   const view = ({ inicio:vInicio, tomar:vTomar, historial:vHistorial, pendientes:vPendientes,
                   resumen:vResumen, tareas:vTareas, cierre:vCierre, ajustes:vAjustes })[S.tab]();
   app.innerHTML = `<div class="wrap">
-    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"} · v4</small></div>
+    <header class="top"><div class="who">${esc(S.nombre)}<small>${S.isAdmin?"Vista de papá":"Tu caja"} · v5</small></div>
     <button class="linkbtn" data-act="logout">Salir</button></header>
     ${view}</div>
     <nav class="tabs" aria-label="Secciones">${tabs.map(([k,n]) =>
